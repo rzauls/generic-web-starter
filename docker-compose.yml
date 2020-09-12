@@ -1,0 +1,50 @@
+version: '3'
+
+networks:
+  generic-laravel:
+
+services:
+  generic-nginx:
+    image: nginx:stable-alpine
+    container_name: generic-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - generic-mysql
+      - generic-php
+    networks:
+      - generic-laravel
+
+  generic-mysql:
+    image: mysql:5.7.22
+    container_name: generic-mysql
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "4306:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: homestead
+      MYSQL_USER: homestead
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+      SERVICE_TAGS: dev
+      SERVICE_NAME: generic-mysql
+    networks:
+      - generic-laravel
+
+  generic-php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: generic-php
+    volumes:
+      - ./src:/var/www/html
+    ports:
+      - "9000:9000"
+    networks:
+      - generic-laravel
